@@ -177,13 +177,13 @@
         subscribePayload_0: "",
         subscribePayload_1: "",
         subscribePayload_2: "",
-        subscribePayload_0_len: "",
-        subscribePayload_1_len: "",
-        subscribePayload_2_len: "",
-        messId: "",
-        data_len: 0,
-        index: 0,
-        publishState: "",
+        publishState: "",       // string of 16 digits with the status of the PUBACKs( QoS 1 ) - 0 unknown, 1 not answer, 2 ok
+        // for debug
+        // subscribePayload_0_len: "",
+        // subscribePayload_1_len: "",
+        // subscribePayload_2_len: "",
+        // messId: "",
+        // data_len: 0,
     },
     //*************************************************************************
     //  4b - LOCAL VARIABLES
@@ -193,6 +193,7 @@
     PUBLISH_MAX: 16,
     KEEPALIVE_SECONDS:[ 0, 5, 10, 15, 20, 25, 30, 40, 50, 60, 90, 120, 150, 180, 210, 240, 300 ],
     TIMEOUT_PUBLISH_SECONDS: 15,
+    // limits for the "script" health, I think...
     MAXSIZE_SUB_PAYLOAD: 250,
     MAXSIZE_SEND_MESSAGE: 400,
     // 3 (for mqtt 3.0) - 4 (for mqtt 3.1.1)
@@ -319,7 +320,7 @@
             {   this._pingRequest();
                 this.mqttStatus.pingCount = 0;
             }
-            // check state published
+            // timeout PUBACKs
             var topicNum;
             var aux = "";
             for ( topicNum=0; topicNum<this.PUBLISH_MAX; topicNum++)
@@ -379,7 +380,7 @@
         connectBuffer[10] = ( this.Setup.keepAlive & 0xFF00 ) >> 8;
         connectBuffer[11] = this.Setup.keepAlive & 0x00FF;
         // client id
-        index = 12;
+        var index = 12;
         if ( this.Setup.clientId != "" ) 
         {   connectBuffer.write(  this.Setup.clientId, index, this.Setup.clientId.length, "ascii" );
             index +=  this.Setup.clientId.length;
@@ -415,7 +416,7 @@
     },
 
     //*************************************************************************
-    //  DISCONNECT - not used
+    //  DISCONNECT
     _disconnect: function(){
         this.sendBuff = new Buffer(2);
         this.sendBuff[0] = this.MQTT_CTRL_DISCONNECT << 4;
@@ -504,7 +505,7 @@
     },
 
     //*************************************************************************
-    //  STRING FORMAT - ADD A STRING TO THE BUFFER WITH ITS LEN IN FRONT IT, IN 16bits FORMAT 
+    //  STRING FORMAT - ADD A STRING TO THE BUFFER WITH ITS LENGTH IN FRONT IT, IN 16 bits FORMAT 
     _stringformat: function( buffer, index, data ){
         buffer[index++] = data.length >> 8;
         buffer[index++] = data.length & 0xFF;
@@ -611,11 +612,11 @@
                         messageId += data[index++];
                         lenPayload -= 2;
                         // debug
-                        this.Device.messId = messageId;
+                        //this.Device.messId = messageId;
                     }
                     else
                         // debug
-                        this.Device.messId = "no Id";
+                        //this.Device.messId = "no Id";
                     // check if is a valid topic number
                     if ( topicNum < 0 && QoS > 0 )
                         // something went wrong - message must be answered always for QoS > 0
@@ -628,19 +629,22 @@
                                 this.Device.subscribePayload_0 = "";
                                 for ( i=index; i<lenPayload+index; i++)
                                     this.Device.subscribePayload_0 += String.fromCharCode(data[i]);
-                                this.Device.subscribePayload_0_len = lenPayload;
+                                // debug
+                                //this.Device.subscribePayload_0_len = lenPayload;
                                 break;
                             case 1:
                                 this.Device.subscribePayload_1 = "";
                                 for ( i=index; i<lenPayload+index; i++)
                                     this.Device.subscribePayload_1 += String.fromCharCode(data[i]);
-                                this.Device.subscribePayload_1_len = lenPayload;
+                                // debug
+                                //this.Device.subscribePayload_1_len = lenPayload;
                                 break;
                             case 2:
                                 this.Device.subscribePayload_2 = "";
                                 for ( i=index; i<lenPayload+index; i++)
                                     this.Device.subscribePayload_2 += String.fromCharCode(data[i]);
-                                this.Device.subscribePayload_2_len = lenPayload;
+                                // debug
+                                //this.Device.subscribePayload_2_len = lenPayload;
                                 break;
                         }
                         this.Device.lastError = "";
@@ -678,8 +682,7 @@
             }
             while ( index < data.length );
             // debug
-            this.Device.index = index;
-            this.Device.data_len = data.length;
+            // this.Device.data_len = data.length;
         }
     },
 
@@ -728,12 +731,12 @@
         this.mqttData.topicPublishQoS = [];
         for ( i=0; i<this.PUBLISH_MAX; i++)
         {   this.mqttStatus.publishId[i] = 0;
-            this.mqttStatus.publishState[i] = 0;    // 0 unknown, 1 not answer, 2 ok
+            this.mqttStatus.publishState[i] = 0;
             this.mqttStatus.publishStateCount[i] = 0;
             this.mqttData.topicPublish[i] = "";
             this.mqttData.topicPublishQoS[i] = 0;
         }
-        // flags
+        // flags & counters
         this.mqttStatus.connectedFlag = false;
         this.mqttStatus.pingCount = 0;
         this.mqttStatus.pingAnswer = false;
