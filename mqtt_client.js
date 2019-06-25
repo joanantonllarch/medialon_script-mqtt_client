@@ -314,9 +314,12 @@
                     // subscribe    
                     this._subscribe(i);
             }
-            // update counter and check if is needed to ping before keepalive time is reached at 80%
             this.mqttStatus.pingCount++;
-            if ( this.mqttStatus.pingCount > this.Setup.keepAlive * 0.8  )
+            // default ping timeout 30 seconds or 80% keepalive time
+            var timeout = 30;
+            if ( this.Setup.keepAlive * 0.8 > 10 )
+                timeout = this.Setup.keepAlive * 0.8;
+            if ( this.mqttStatus.pingCount > timeout  )
             {   this._pingRequest();
                 this.mqttStatus.pingCount = 0;
             }
@@ -421,7 +424,6 @@
         this.sendBuff = new Buffer(2);
         this.sendBuff[0] = this.MQTT_CTRL_DISCONNECT << 4;
         this.sendBuff[1] = 0;
-        this.mqttStatus.pingAnswer = false;
         this.mqttTcpClient.write( this.sendBuff );
         this.mqttTcpClient.end();
         this.mqttStatus.connectedFlag = false;
@@ -491,7 +493,6 @@
         this.sendBuff = new Buffer(2);
         this.sendBuff[0] = this.MQTT_CTRL_PINGREQ << 4;
         this.sendBuff[1] = 0;
-        this.mqttStatus.pingAnswer = false;
         this.mqttTcpClient.write( this.sendBuff );
     },
 
@@ -669,7 +670,8 @@
                 else if ( data[index] >> 4 == this.MQTT_CTRL_PINGRESP )
                 {   index++;
                     if ( data[index++] == 0 )
-                        this.mqttStatus.pingAnswer = true;
+                    {   this.mqttStatus.pingCount = 0;
+                    }
                 }
                 // is a UNSUBACK?
                 else if ( data[index] >> 4 == this.MQTT_CTRL_SUBACK )
@@ -741,7 +743,6 @@
         // flags & counters
         this.mqttStatus.connectedFlag = false;
         this.mqttStatus.pingCount = 0;
-        this.mqttStatus.pingAnswer = false;
         this.mqttStatus.publishCount = 0;
     },
 
