@@ -4,9 +4,9 @@
     // 2 - INFO
     //*************************************************************************
     Info:
-    {   Title:"Mqtt Client v1.0",
+    {   Title:"Mqtt Client v1.0.2",
         Author:"Joan A. Llarch - Barcelona - June 2019",
-        Version:"1.0",
+        Version:"1.0.2",
         Description:"Mqtt Client - For QoS 0 and 1 - Maximun 3 subscriptions on Setup - Maximum 16 publish messages on command",
 
         Setup:
@@ -164,7 +164,7 @@
         lastWillTopic: "Mqtt Manager",
         lastWillMessage: "out of order",
         lastWillQos: 1,
-        keepAlive: 90,
+        keepAlive: 0,
         retain: 0,
      },
     //*************************************************************************
@@ -394,7 +394,7 @@
         {   index = this._stringformat( connectBuffer, index, this.Setup.lastWillTopic );
             index = this._stringformat( connectBuffer, index, this.Setup.lastWillMessage ); 
         }
-        // username + password
+        // username
         if (  this.Setup.userName != "" ) 
         {   index = this._stringformat( connectBuffer, index, this.Setup.userName );
             // password
@@ -619,10 +619,12 @@
                         //this.Device.messId = "no Id";
                     // check if is a valid topic number
                     if ( topicNum < 0 && QoS > 0 )
-                        // something went wrong - message must be answered always for QoS > 0
+                    {   // something went wrong - message must be answered always for QoS > 0
                         this._puback( QoS, messageId );
+                        return;
+                    }
                     // a limit for the input frame size - good for the script health?
-                    if ( data.length <= this.MAXSIZE_SUB_PAYLOAD )
+                    if ( lenPayload <= this.MAXSIZE_SUB_PAYLOAD )
                     {   // get payload
                         switch (topicNum)
                         {   case 0:
@@ -658,13 +660,13 @@
                         this._puback( QoS, messageId );
                 }
                 // is a PINGREQ?
-                else if ( data[index] >> 4 == this.MQTT_CTRL_PINGREQ && data.length == 2 )
+                else if ( data[index] >> 4 == this.MQTT_CTRL_PINGREQ )
                 {   index++;
                     if ( data[index++] == 0 )
                         this._pingResponse();
                 }
                 // is a PINGRESP?
-                else if ( data[index] >> 4 == this.MQTT_CTRL_PINGRESP && data.length == 2 )
+                else if ( data[index] >> 4 == this.MQTT_CTRL_PINGRESP )
                 {   index++;
                     if ( data[index++] == 0 )
                         this.mqttStatus.pingAnswer = true;
@@ -746,7 +748,8 @@
     //*************************************************************************
     // STARTUP FUNCTION
     _mStart : function() {
-        this.Setup.keepAlive = this.KEEPALIVE_SECONDS[this.Setup.keepAlive];
+        if ( this.KEEPALIVE_SECONDS[this.Setup.keepAlive] != "")
+            this.Setup.keepAlive = this.KEEPALIVE_SECONDS[this.Setup.keepAlive];
         this.mqttTcpClient = QMedialon.CreateSocket();
         this.mqttStatus.connectedFlag == false;
         this.setIntervalId = 0;
