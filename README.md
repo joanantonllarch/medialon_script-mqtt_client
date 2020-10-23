@@ -11,4 +11,4 @@ Note that this does not support the full MQTT spec but is intended to support en
 
 #### v1.0.3 - ClientId string is checked as only characters
 
-![Image of panel](https://github.com/joanantonllarch/medialon_script-mqtt_client/panel_mqtt.png)
+![Image of panel](panel_mqtt.png)
