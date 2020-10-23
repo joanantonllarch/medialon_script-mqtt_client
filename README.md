@@ -10,3 +10,5 @@ Note that this does not support the full MQTT spec but is intended to support en
 #### v1.0.2 - keepalive var was bad initialized on default.Update the ping routine.
 
 #### v1.0.3 - ClientId string is checked as only characters
+
+![Image of panel](https://https://github.com/joanantonllarch/medialon_script-mqtt_client/edit/master/)
