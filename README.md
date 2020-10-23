@@ -11,6 +11,6 @@ Note that this does not support the full MQTT spec but is intended to support en
 
 #### v1.0.3 - ClientId string is checked as only characters
 
-### Medialon Manager Panel screenshot:
+##### Medialon Manager Panel screenshot:
 
 ![Image of panel](panel_mqtt.png)
