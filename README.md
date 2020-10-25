@@ -14,4 +14,4 @@ Note that this does not support the full MQTT spec but is intended to support en
 ##### <br/>
 ##### Medialon Manager Panel screenshot:
 
-![Image of panel](panel_mqtt.png)
+![Image of panel](screenshots/panel_mqtt.png)
